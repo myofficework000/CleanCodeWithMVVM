@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -30,6 +31,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.example.imageflickrapp.R
+import com.example.imageflickrapp.presentation.util.DateFormatter
 import com.example.imageflickrapp.presentation.viewmodel.PhotoListViewModel
 
 @Composable
@@ -37,7 +39,7 @@ fun DetailedScreen(photoListViewModel: PhotoListViewModel) {
     val scrollState = rememberScrollState()
     val context = LocalContext.current
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
-    val selectedImage by photoListViewModel.selectedImage.collectAsStateWithLifecycle()
+    val photo by photoListViewModel.selectedImage.collectAsStateWithLifecycle()
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -46,7 +48,7 @@ fun DetailedScreen(photoListViewModel: PhotoListViewModel) {
                 .padding(dimensionResource(R.dimen.spacing_medium))
                 .verticalScroll(scrollState)
         ) {
-            DisposableEffect(selectedImage.link) {
+            DisposableEffect(photo.link) {
                 val requestManager = Glide.with(context)
                 val target = object : CustomTarget<Bitmap>() {
                     override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
@@ -60,7 +62,7 @@ fun DetailedScreen(photoListViewModel: PhotoListViewModel) {
 
                 requestManager
                     .asBitmap()
-                    .load(selectedImage.link)
+                    .load(photo.link)
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .priority(Priority.HIGH)
                     .encodeQuality(95)
@@ -74,7 +76,7 @@ fun DetailedScreen(photoListViewModel: PhotoListViewModel) {
                 }
             }
 
-            if (selectedImage.link.isNotEmpty()) {
+            if (photo.link.isNotEmpty()) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -88,7 +90,7 @@ fun DetailedScreen(photoListViewModel: PhotoListViewModel) {
                         bitmap?.let { btm ->
                             Image(
                                 bitmap = btm.asImageBitmap(),
-                                contentDescription = selectedImage.title,
+                                contentDescription = photo.title,
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop,
                                 filterQuality = FilterQuality.High
@@ -113,23 +115,23 @@ fun DetailedScreen(photoListViewModel: PhotoListViewModel) {
                     onClick = {
                         val shareIntent = Intent(Intent.ACTION_SEND).apply {
                             type = "text/plain"
-                            putExtra(Intent.EXTRA_SUBJECT, selectedImage.title)
+                            putExtra(Intent.EXTRA_SUBJECT, photo.title)
                             val shareText = buildString {
-                                append(context.getString(R.string.share_message))
-                                append(context.getString(R.string.share_title_prefix, selectedImage.title))
-                                append(context.getString(R.string.share_author_prefix, selectedImage.author))
-                                append(context.getString(R.string.share_date_prefix, TextUtils.formatDate(selectedImage.dataTaken)))
-                                append(context.getString(R.string.share_link_prefix, selectedImage.link))
+                                append(context.getString(R.string.share_message_intro))
+                                append(context.getString(R.string.share_photo_title, photo.title))
+                                append(context.getString(R.string.share_photo_author, photo.author))
+                                append(context.getString(R.string.share_photo_date_taken, DateFormatter.formatDate(photo.dataTaken)))
+                                append(context.getString(R.string.share_photo_link, photo.link))
 
-                                val (width, height) = TextUtils.parseImageDimensions(selectedImage.description)
-                                append(context.getString(R.string.share_dimensions, width, height))
+                                val (imageWidth, imageHeight) = DateFormatter.parseImageDimensions(photo.description)
+                                append(context.getString(R.string.share_photo_dimensions, imageWidth, imageHeight))
                             }
                             putExtra(Intent.EXTRA_TEXT, shareText)
                         }
-                        context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_title)))
+                        context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_intent_title)))
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = TextSecondary)
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Blue)
                 ) {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small)),
@@ -156,15 +158,15 @@ fun DetailedScreen(photoListViewModel: PhotoListViewModel) {
                     // Title section
                     Column {
                         Text(
-                            text = stringResource(R.string.label_title),
+                            text = stringResource(R.string.photo_label_title),
                             style = MaterialTheme.typography.labelLarge,
-                            color = TextSecondary,
+                            color = Color.Blue,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = selectedImage.title,
+                            text = photo.title,
                             style = MaterialTheme.typography.headlineMedium,
-                            color = TextPrimary,
+                            color = Color.Blue,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -172,16 +174,16 @@ fun DetailedScreen(photoListViewModel: PhotoListViewModel) {
                     // Description section
                     Column {
                         Text(
-                            text = stringResource(R.string.label_description),
+                            text = stringResource(R.string.photo_label_description),
                             style = MaterialTheme.typography.labelLarge,
-                            color = TextSecondary,
+                            color = Color.Blue,
                             fontWeight = FontWeight.Bold
                         )
-                        val parsedText = TextUtils.parseHtmlToAnnotatedString(selectedImage.description)
+                        val parsedText = DateFormatter.parseHtmlToAnnotatedString(photo.description)
                         Text(
                             text = parsedText,
                             style = MaterialTheme.typography.bodyLarge,
-                            color = TextPrimary,
+                            color = Color.Blue,
                             lineHeight = 24.sp
                         )
                     }
@@ -191,49 +193,49 @@ fun DetailedScreen(photoListViewModel: PhotoListViewModel) {
                     // Author section
                     Column {
                         Text(
-                            text = stringResource(R.string.label_author),
+                            text = stringResource(R.string.photo_label_author),
                             style = MaterialTheme.typography.labelLarge,
-                            color = TextSecondary,
+                            color = Color.Blue,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = selectedImage.author,
+                            text = photo.author,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = TextPrimary
+                            color = Color.Blue
                         )
                     }
 
                     // Dimensions section
                     Column {
                         Text(
-                            text = stringResource(R.string.label_dimensions),
+                            text = stringResource(R.string.photo_label_dimensions),
                             style = MaterialTheme.typography.labelLarge,
-                            color = TextSecondary,
+                            color = Color.Blue,
                             fontWeight = FontWeight.Bold
                         )
-                        val (width, height) = TextUtils.parseImageDimensions(selectedImage.description)
+                        val (width, height) = DateFormatter.parseImageDimensions(photo.description)
                         Text(
-                            text = stringResource(R.string.dimensions_format, width, height),
+                            text = stringResource(R.string.photo_dimensions_format, width, height),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = TextPrimary
+                            color = Color.Blue
                         )
                     }
 
                     // Date section
                     Column {
                         Text(
-                            text = stringResource(R.string.label_published_date),
+                            text = stringResource(R.string.photo_label_published_date),
                             style = MaterialTheme.typography.labelLarge,
-                            color = TextSecondary,
+                            color = Color.Blue,
                             fontWeight = FontWeight.Bold
                         )
-                        val formattedDate = remember(selectedImage.dataTaken) {
-                            TextUtils.formatDate(selectedImage.dataTaken)
+                        val formattedDate = remember(photo.dataTaken) {
+                            DateFormatter.formatDate(photo.dataTaken)
                         }
                         Text(
                             text = formattedDate,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = TextPrimary
+                            color = Color.Blue
                         )
                     }
 
@@ -245,7 +247,7 @@ fun DetailedScreen(photoListViewModel: PhotoListViewModel) {
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = stringResource(R.string.no_image_selected),
+                        text = stringResource(R.string.photo_no_image_selected),
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

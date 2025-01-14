@@ -11,6 +11,7 @@ import androidx.navigation.NavController
 import androidx.compose.ui.platform.testTag
 import com.example.imageflickrapp.presentation.viewmodel.PhotoListViewModel
 
+
 /**
  * HomeScreen is the main screen of the application that displays a search bar at the top
  * and an image grid below it. The layout uses ConstraintLayout for positioning components
@@ -23,7 +24,7 @@ import com.example.imageflickrapp.presentation.viewmodel.PhotoListViewModel
 @Composable
 fun HomeScreen(
     navController: NavController,
-    photoListViewModel: PhotoListViewModel,
+    photoViewModel: PhotoListViewModel,
     modifier: Modifier = Modifier
 ) {
     // Root ConstraintLayout to arrange components dynamically.
@@ -50,7 +51,7 @@ fun HomeScreen(
                 .testTag("searchBar")
         ) {
             // Search bar composable displaying search functionality.
-            SearchBar(photoListViewModel)
+            SearchBar(photoViewModel)
         }
 
         // Image grid positioned below the search bar.
@@ -64,7 +65,7 @@ fun HomeScreen(
                 }
                 .testTag("photoGrid"),
             navController = navController,
-            photoListViewModel = photoListViewModel
+            photoViewModel = photoViewModel
         )
     }
 }

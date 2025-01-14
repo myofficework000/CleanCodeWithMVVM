@@ -65,13 +65,13 @@ class PhotoListViewModel @Inject constructor(
         }
     }
 
-    fun updateSearchQuery(newQuery: String) {
+    fun setSearchQuery(newQuery: String) {
         viewModelScope.launch {
             _searchQuery.emit(newQuery)
         }
     }
 
-    fun updateSelectedImage(image: Image) {
+    fun setSelectedPhoto(image: Image) {
         _selectedImage.value = image
     }
 
