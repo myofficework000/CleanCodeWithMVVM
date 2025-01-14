@@ -9,6 +9,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.navigation.NavController
 import androidx.compose.ui.platform.testTag
+import com.example.imageflickrapp.presentation.viewmodel.PhotoListViewModel
 
 /**
  * HomeScreen is the main screen of the application that displays a search bar at the top

@@ -1,21 +1,26 @@
 package com.example.imageflickrapp.data.repository
 
 import android.util.Log
-import com.example.imageflickrapp.data.remote.ApiService
+import com.example.imageflickrapp.data.mapper.ImageMapper
+import com.example.imageflickrapp.data.remote.FlickrApiService
 import com.example.imageflickrapp.domain.data.FetchImageState
-import com.example.imageflickrapp.domain.repository.IImageRepository
+import com.example.imageflickrapp.domain.repository.IPhotoRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.withContext
+import java.net.UnknownHostException
 import javax.inject.Inject
 
 
-class ImageRepository @Inject constructor(private val apiService: ApiService) : IImageRepository {
+class PhotoRepositoryImpl @Inject constructor(private val apiService: FlickrApiService) : IPhotoRepository {
 
     companion object {
         private const val TAG = "ImageRepository"
         private const val ERROR_GENERIC = "Something went wrong. Please try again"
-        private const val ERROR_NO_INTERNET = "Please check your internet connection and try again"
-        private fun getNoImagesError(query: String) = "No images found for '$query'"
+        private const val ERROR_NO_INTERNET = "Unable to connect. Please check your internet connection and try again."
+        private fun noImagesError(query: String) = "No result found for '$query'"
     }
 
     override suspend fun getImageStateFlow(query: String): Flow<FetchImageState> = flow {
@@ -41,28 +46,24 @@ class ImageRepository @Inject constructor(private val apiService: ApiService) : 
                     emit(FetchImageState.Failure(ERROR_GENERIC))
                 }
                 else -> {
-                    // heavy mapping operation
                     val mappedImages = withContext(Dispatchers.Default) {
                         body.items.map { ImageMapper.mapToDomain(it) }
                     }
 
                     if (mappedImages.isEmpty()) {
                         Log.w(TAG, "No images found")
-                        emit(ImageFetchState.Error(getNoImagesError(queries)))
+                        emit(FetchImageState.Failure(noImagesError(query)))
                     } else {
-                        emit(ImageFetchState.Success(mappedImages))
+                        emit(FetchImageState.Success(mappedImages))
                     }
                 }
             }
         } catch (e: UnknownHostException) {
             Log.e(TAG, "No internet", e)
-            emit(ImageFetchState.Error(ERROR_NO_INTERNET))
+            emit(FetchImageState.Failure(ERROR_NO_INTERNET))
         } catch (e: Exception) {
             Log.e(TAG, "Error fetching images", e)
-            emit(ImageFetchState.Error(ERROR_GENERIC))
+            emit(FetchImageState.Failure(ERROR_GENERIC))
         }
-    }.flowOn(Dispatchers.IO) // network operations on IO dispatcher
+    }.flowOn(Dispatchers.IO)
 }
-
-
-

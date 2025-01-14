@@ -1,7 +1,7 @@
 package com.example.imageflickrapp.di
 
 import com.example.imageflickrapp.data.remote.Constant
-import com.example.imageflickrapp.data.remote.ApiService
+import com.example.imageflickrapp.data.remote.FlickrApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -45,8 +45,8 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideApiService(retrofit: Retrofit) : ApiService {
-        return retrofit.create(ApiService::class.java)
+    fun provideApiService(retrofit: Retrofit) : FlickrApiService {
+        return retrofit.create(FlickrApiService::class.java)
     }
 }
 

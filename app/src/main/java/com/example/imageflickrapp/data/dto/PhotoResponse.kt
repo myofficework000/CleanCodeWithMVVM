@@ -2,7 +2,7 @@ package com.example.imageflickrapp.data.dto
 
 import com.google.gson.annotations.SerializedName
 
-data class ImageResponse(
+data class PhotoResponse(
     @SerializedName("title")
     val title: String,
 
