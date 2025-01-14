@@ -1,4 +1,4 @@
-package com.example.imageflickrapp.presentation
+package com.example.imageflickrapp.presentation.view
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
