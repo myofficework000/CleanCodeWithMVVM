@@ -1,3 +1,28 @@
 <resources>
     <string name="app_name">Image Flickr App</string>
+    <string name="share_message_intro">Check out this amazing photo!</string>
+    <string name="share_photo_title">Title: %1$s</string>
+    <string name="share_photo_author">Author: %1$s</string>
+    <string name="share_photo_date_taken">Date Taken: %1$s</string>
+    <string name="share_photo_link">View photo: %1$s</string>
+    <string name="share_photo_dimensions">Dimensions: %1$d x %2$d</string>
+    <string name="share_intent_title">Share this photo via</string>
+    <string name="share">Share Photo</string>
+    <string name="photo_label_title">Photo Title</string>
+    <string name="photo_label_description">Description</string>
+    <string name="photo_label_author">Author</string>
+    <string name="photo_label_dimensions">Dimensions</string>
+    <string name="photo_label_published_date">Published Date</string>
+    <string name="photo_dimensions_format">Width: %1$d px, Height: %2$d px</string>
+    <string name="photo_no_image_selected">No image selected</string>
+    <string name="error_message_title">An error occurred</string>
+    <string name="idle_state_title">Explore Stunning Photos</string>
+    <string name="idle_state_message">Search for your favorite images or discover new photography collections.</string>
+    <string name="splash_message">Welcome to Flickr App</string>
+    <string name="home_title">Flickr Image Search</string>
+
+    <string name="search_placeholder_text">Search for photos...</string>
+    <string name="search_icon_description">Search Icon</string>
+    <string name="search_clear_description">Clear Search Field</string>
+    <string name="photo_detail_Screen">Photo Details Screen</string>
 </resources>

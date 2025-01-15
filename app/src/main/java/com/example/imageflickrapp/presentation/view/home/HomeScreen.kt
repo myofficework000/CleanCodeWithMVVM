@@ -1,47 +1,55 @@
 package com.example.imageflickrapp.presentation.view.home
 
-
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.navigation.NavController
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import com.example.imageflickrapp.R
 import com.example.imageflickrapp.presentation.viewmodel.PhotoListViewModel
 
 
-/**
- * HomeScreen is the main screen of the application that displays a search bar at the top
- * and an image grid below it. The layout uses ConstraintLayout for positioning components
- * dynamically.
- *
- * @param navController Used for navigation between screens.
- * @param photoViewModel ViewModel instance for managing data.
- * @param modifier Modifier to be applied to the root layout of the screen.
- */
 @Composable
 fun HomeScreen(
     navController: NavController,
     photoViewModel: PhotoListViewModel,
     modifier: Modifier = Modifier
 ) {
-    // Root ConstraintLayout to arrange components dynamically.
     ConstraintLayout(
         modifier = modifier.fillMaxSize()
     ) {
-        // Create references for child components.
-        val (searchBar, imagesGrid) = createRefs()
 
-        // Define a guideline at 20% from the top.
-        val guideLineFromTop = createGuidelineFromTop(0.2f)
+        val (title, searchField, photoList) = createRefs()
 
-        // Search bar positioned at the top using the defined guideline.
+        val guideLineFromTop = createGuidelineFromTop(0.15f)
+        Text(
+            text = stringResource(R.string.home_title),
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier
+                .padding(top = dimensionResource(R.dimen.spacing_extraLarge))
+                .constrainAs(title) {
+                    top.linkTo(parent.top)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                }
+                .testTag("imageSearchTitle")
+        )
+
         Box(
             modifier = Modifier
-                .constrainAs(searchBar) {
-                    top.linkTo(parent.top)
+                .padding(top = dimensionResource(R.dimen.spacing_extraSmall))
+                .constrainAs(searchField) {
+                    top.linkTo(title.bottom)
                     bottom.linkTo(guideLineFromTop)
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
@@ -50,20 +58,18 @@ fun HomeScreen(
                 }
                 .testTag("searchBar")
         ) {
-            // Search bar composable displaying search functionality.
             SearchBar(photoViewModel)
         }
 
-        // Image grid positioned below the search bar.
         PhotoGrid(
             modifier = Modifier
-                .constrainAs(imagesGrid) {
+                .constrainAs(photoList) {
                     top.linkTo(guideLineFromTop)
                     bottom.linkTo(parent.bottom)
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
                 }
-                .testTag("photoGrid"),
+                .testTag("photoList"),
             navController = navController,
             photoViewModel = photoViewModel
         )

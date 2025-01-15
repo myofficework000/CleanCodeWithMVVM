@@ -39,50 +39,49 @@ import com.bumptech.glide.Priority
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.target.CustomTarget
 import com.example.imageflickrapp.R
-import com.example.imageflickrapp.domain.data.Image
 import com.example.imageflickrapp.presentation.util.PhotoGridConstants
 import com.bumptech.glide.request.transition.Transition
-
+import com.example.imageflickrapp.domain.data.Photo
 
 @Composable
 fun PhotoCard(
-    photo: Image,
+    photo: Photo,
     onPhotoClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    var photoBitmap by remember(photo.link) { mutableStateOf<Bitmap?>(null) }
+    var bitmapPhoto by remember(photo.link) { mutableStateOf<Bitmap?>(null) }
 
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .aspectRatio(1f)
-            .clickable(onClick = onPhotoClick),
         elevation = CardDefaults.cardElevation(
             defaultElevation = dimensionResource(R.dimen.card_shadow_elevation)
         ),
-        shape = RoundedCornerShape(dimensionResource(R.dimen.card_radius))
+        shape = RoundedCornerShape(dimensionResource(R.dimen.card_radius)),
+        modifier = modifier
+            .fillMaxWidth()
+            .aspectRatio(1f)
+            .clickable(onClick = onPhotoClick)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             DisposableEffect(photo.link) {
                 val requestManager = Glide.with(context)
                 val target = object : CustomTarget<Bitmap>() {
                     override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
-                        photoBitmap = resource
+                        bitmapPhoto = resource
                     }
 
                     override fun onLoadCleared(placeholder: Drawable?) {
-                        photoBitmap = null
+                        bitmapPhoto = null
                     }
                 }
 
                 requestManager
                     .asBitmap()
-                    .load(photo.link)
-                    .override(PhotoGridConstants.PHOTO_THUMBNAIL_DIMENSION, PhotoGridConstants.PHOTO_THUMBNAIL_DIMENSION)
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .encodeQuality(PhotoGridConstants.PHOTO_THUMBNAIL_QUALITY_PERCENTAGE)
+                    .load(photo.link)
                     .priority(Priority.HIGH)
+                    .encodeQuality(PhotoGridConstants.PHOTO_THUMBNAIL_QUALITY_PERCENTAGE)
+                    .override(PhotoGridConstants.PHOTO_THUMBNAIL_DIMENSION, PhotoGridConstants.PHOTO_THUMBNAIL_DIMENSION)
                     .thumbnail(
                         Glide.with(context)
                             .asBitmap()
@@ -93,27 +92,27 @@ fun PhotoCard(
                     .into(target)
 
                 onDispose {
-                    photoBitmap = null
+                    bitmapPhoto = null
                     requestManager.clear(target)
                 }
             }
 
-            photoBitmap?.let { bitmap ->
+            bitmapPhoto?.let { bitmap ->
                 Image(
                     bitmap = bitmap.asImageBitmap(),
                     contentDescription = photo.title,
-                    modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
-                    filterQuality = FilterQuality.High
+                    filterQuality = FilterQuality.High,
+                    modifier = Modifier.fillMaxSize()
                 )
             } ?: Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize()
             ) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(dimensionResource(R.dimen.icon_standard_size)),
                     color = MaterialTheme.colorScheme.primary,
-                    strokeWidth = dimensionResource(R.dimen.loading_indicator_thickness)
+                    strokeWidth = dimensionResource(R.dimen.loading_indicator_thickness),
+                    modifier = Modifier.size(dimensionResource(R.dimen.icon_standard_size)),
                 )
             }
 
@@ -130,17 +129,17 @@ fun PhotoCard(
                             endY = 100f
                         )
                     )
-                    .align(Alignment.BottomCenter)
                     .padding(dimensionResource(R.dimen.spacing_medium))
+                    .align(Alignment.BottomCenter)
             ) {
                 Text(
                     text = photo.title,
                     color = White,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Medium
-                    ),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    )
                 )
             }
         }

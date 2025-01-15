@@ -7,7 +7,7 @@ import javax.inject.Inject
 class GetPublicPhotosUseCase @Inject constructor(
     private val imageRepository: IPhotoRepository
 ) : IGetPublicPhotosUseCase {
-    override suspend fun invoke(query: String) = imageRepository.getImageStateFlow(query)
+    override suspend fun invoke(searchTerm: String) = imageRepository.fetchImageStateFlow(searchTerm)
 }
 
 

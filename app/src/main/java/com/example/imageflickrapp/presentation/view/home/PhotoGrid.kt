@@ -19,39 +19,25 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.imageflickrapp.domain.data.FetchImageState
-import com.example.imageflickrapp.domain.data.Image
+import com.example.imageflickrapp.domain.data.Photo
 import com.example.imageflickrapp.presentation.viewmodel.PhotoListViewModel
 
-/**
- * PhotoGrid is a placeholder function to represent the grid of photos.
- * It fetches and displays a list of images using the ViewModel and supports navigation.
- *
- * @param modifier Modifier to be applied to the grid layout.
- * @param navController Used for navigation to photo details or other screens.
- * @param photoViewModel ViewModel instance for fetching and displaying photos.
- */
-
-
-
-/**
- * Main Composable that displays the photo grid based on the current UI state.
- */
 @Composable
 fun PhotoGrid(
     modifier: Modifier = Modifier,
     navController: NavController,
     photoViewModel: PhotoListViewModel
 ) {
-    val photoResult = photoViewModel.uiState.collectAsStateWithLifecycle()
+    val photoResult = photoViewModel.imageFetchState.collectAsStateWithLifecycle()
 
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         when (val result = photoResult.value) {
-            is FetchImageState.Idle -> IdleState()
-            is FetchImageState.Loading -> LoadingState()
-            is FetchImageState.Success -> {
+            is FetchImageState.Pending -> PendingState()
+            is FetchImageState.Fetching -> FetchingState()
+            is FetchImageState.FetchedSuccessfully -> {
                 PhotosGrid(
                     photos = result.thumbnail,
                     onPhotoClick = { image ->
@@ -60,75 +46,86 @@ fun PhotoGrid(
                     }
                 )
             }
-            is FetchImageState.Failure -> ErrorState(message = result.message)
+            is FetchImageState.ErrorOccurred -> ErrorState(message = result.message)
         }
     }
 }
 
-/**
- * Composable function to show a loading indicator during data fetching.
- */
 @Composable
-private fun LoadingState() {
-    CircularProgressIndicator(
-        color = Color.Black,
-        modifier = Modifier.size(dimensionResource(R.dimen.loading_indicator_diameter)),
-        strokeWidth = dimensionResource(R.dimen.loading_indicator_thickness)
-    )
-}
-
-/**
- * Composable function to display an error message in case of data fetch failure.
- * @param message The error message to display.
- */
-@Composable
-private fun ErrorState(message: String) {
+private fun PendingState() {
     Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxWidth()
             .padding(dimensionResource(R.dimen.spacing_medium)),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = stringResource(R.string.error_message_title),
-            style = MaterialTheme.typography.titleMedium,
+            text = stringResource(R.string.idle_state_title),
             color = Color.Black,
-            modifier = Modifier.padding(bottom = dimensionResource(R.dimen.spacing_small))
+            style = MaterialTheme.typography.headlineLarge
         )
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_small)))
         Text(
-            text = message,
-            style = MaterialTheme.typography.bodyMedium,
-            color = Color.Black,
-            textAlign = TextAlign.Center
+            text = stringResource(R.string.idle_state_message),
+            color =  Color.Black,
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodyLarge
         )
     }
 }
 
-/**
- * Composable function to display a grid of photos.
- * @param photos List of photos to display.
- * @param onPhotoClick Lambda function invoked when a photo is clicked.
- */
+@Composable
+private fun FetchingState() {
+    CircularProgressIndicator(
+        color = Color.Black,
+        strokeWidth = dimensionResource(R.dimen.loading_indicator_thickness),
+        modifier = Modifier.size(dimensionResource(R.dimen.loading_indicator_diameter))
+    )
+}
+
+@Composable
+private fun ErrorState(message: String) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(dimensionResource(R.dimen.spacing_medium))
+    ) {
+        Text(
+            text = stringResource(R.string.error_message_title),
+            color = Color.Black,
+            style = MaterialTheme.typography.labelMedium,
+            modifier = Modifier.padding(bottom = dimensionResource(R.dimen.spacing_small))
+        )
+        Text(
+            text = message,
+            color = Color.Black,
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.displayMedium
+        )
+    }
+}
+
 @Composable
 private fun PhotosGrid(
-    photos: List<Image>,
-    onPhotoClick: (Image) -> Unit
+    photos: List<Photo>,
+    onPhotoClick: (Photo) -> Unit
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         contentPadding = PaddingValues(
-            start = dimensionResource(R.dimen.grid_item_spacing),
-            end = dimensionResource(R.dimen.grid_item_spacing),
             top = dimensionResource(R.dimen.spacing_small),
-            bottom = dimensionResource(R.dimen.grid_bottom_padding)
+            bottom = dimensionResource(R.dimen.grid_bottom_padding),
+            start = dimensionResource(R.dimen.grid_item_spacing),
+            end = dimensionResource(R.dimen.grid_item_spacing)
         ),
-        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.grid_item_spacing)),
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.grid_item_spacing)),
+        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.grid_item_spacing)),
         state = rememberLazyGridState(),
         modifier = Modifier
             .fillMaxSize()
-            .padding(bottom = dimensionResource(R.dimen.spacing_medium))
+            .padding(bottom = dimensionResource(R.dimen.spacing_small))
     ) {
         items(
             items = photos,
@@ -139,32 +136,5 @@ private fun PhotosGrid(
                 onPhotoClick = { onPhotoClick(photo) }
             )
         }
-    }
-}
-
-/**
- * Composable function to show the idle state when no interaction has occurred.
- */
-@Composable
-private fun IdleState() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(dimensionResource(R.dimen.spacing_medium)),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = stringResource(R.string.idle_state_title),
-            style = MaterialTheme.typography.titleMedium,
-            color = Color.Black
-        )
-        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_small)))
-        Text(
-            text = stringResource(R.string.idle_state_message),
-            style = MaterialTheme.typography.bodyMedium,
-            color =  Color.Black,
-            textAlign = TextAlign.Center
-        )
     }
 }

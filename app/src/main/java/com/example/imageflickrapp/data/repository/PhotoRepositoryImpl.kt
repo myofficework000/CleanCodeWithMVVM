@@ -1,7 +1,7 @@
 package com.example.imageflickrapp.data.repository
 
 import android.util.Log
-import com.example.imageflickrapp.data.mapper.ImageMapper
+import com.example.imageflickrapp.data.mapper.PhotoMapper
 import com.example.imageflickrapp.data.remote.FlickrApiService
 import com.example.imageflickrapp.domain.data.FetchImageState
 import com.example.imageflickrapp.domain.repository.IPhotoRepository
@@ -15,55 +15,54 @@ import javax.inject.Inject
 
 
 class PhotoRepositoryImpl @Inject constructor(private val apiService: FlickrApiService) : IPhotoRepository {
-
     companion object {
-        private const val TAG = "ImageRepository"
-        private const val ERROR_GENERIC = "Something went wrong. Please try again"
-        private const val ERROR_NO_INTERNET = "Unable to connect. Please check your internet connection and try again."
-        private fun noImagesError(query: String) = "No result found for '$query'"
+        private const val TAG = "PhotoRepository"
+        private const val GENERIC_ERROR = "An error occurred. Please try again later."
+        private const val CONNECTION_ERROR = "Unable to connect. Please check your internet connection and try again."
+        private fun noResultsFound(query: String) = "No results found for your search: '$query'"
     }
 
-    override suspend fun getImageStateFlow(query: String): Flow<FetchImageState> = flow {
-        if (query.isEmpty()) {
-            Log.d(TAG, "Empty search query")
-            emit(FetchImageState.Idle)
+    override suspend fun fetchImageStateFlow(searchTerm: String): Flow<FetchImageState> = flow {
+        if (searchTerm.isEmpty()) {
+            emit(FetchImageState.Pending)
+            Log.d(TAG, "Search query is empty")
             return@flow
         }
 
-        emit(FetchImageState.Loading)
+        emit(FetchImageState.Fetching)
 
         try {
-            val response = apiService.getImage(tags = query)
-            val body = response.body()
+            val response = apiService.getFlickrPhotos(tags = searchTerm)
+            // val body = response.body()
 
-            when {
-                !response.isSuccessful -> {
-                    Log.e(TAG, "API error: ${response.code()}")
-                    emit(FetchImageState.Failure(ERROR_GENERIC))
-                }
-                body == null -> {
-                    Log.e(TAG, "Empty response")
-                    emit(FetchImageState.Failure(ERROR_GENERIC))
-                }
-                else -> {
+            if (!response.isSuccessful) {
+                emit(FetchImageState.ErrorOccurred(GENERIC_ERROR))
+                Log.e(TAG, "Error occurred while fetching data. Response code: ${response.code()}")
+            } else {
+                val body = response.body()
+                if (body == null) {
+                    emit(FetchImageState.ErrorOccurred(GENERIC_ERROR))
+                    Log.e(TAG, "Received empty response from the server")
+                } else {
+                    // Body is non-null, proceed with mapping the images
                     val mappedImages = withContext(Dispatchers.Default) {
-                        body.items.map { ImageMapper.mapToDomain(it) }
+                        body.items.map { PhotoMapper.mapToDomain(it) }
                     }
 
                     if (mappedImages.isEmpty()) {
-                        Log.w(TAG, "No images found")
-                        emit(FetchImageState.Failure(noImagesError(query)))
+                        emit(FetchImageState.ErrorOccurred(noResultsFound(searchTerm)))
+                        Log.d(TAG, "No results found for the given search")
                     } else {
-                        emit(FetchImageState.Success(mappedImages))
+                        emit(FetchImageState.FetchedSuccessfully(mappedImages))
                     }
                 }
             }
         } catch (e: UnknownHostException) {
-            Log.e(TAG, "No internet", e)
-            emit(FetchImageState.Failure(ERROR_NO_INTERNET))
+            emit(FetchImageState.ErrorOccurred(CONNECTION_ERROR))
+            Log.e(TAG, "Network connectivity issue ${e.message}")
         } catch (e: Exception) {
-            Log.e(TAG, "Error fetching images", e)
-            emit(FetchImageState.Failure(ERROR_GENERIC))
+            emit(FetchImageState.ErrorOccurred(CONNECTION_ERROR))
+            Log.e(TAG, "Unexpected error occurred while fetching images ${e.message}")
         }
     }.flowOn(Dispatchers.IO)
 }

@@ -4,5 +4,5 @@ import com.example.imageflickrapp.domain.data.FetchImageState
 import kotlinx.coroutines.flow.Flow
 
 interface IGetPublicPhotosUseCase {
-    suspend operator fun invoke(query: String) : Flow<FetchImageState>
+    suspend operator fun invoke(searchTerm: String) : Flow<FetchImageState>
 }
